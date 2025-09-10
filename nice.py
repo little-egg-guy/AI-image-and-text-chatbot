@@ -12,9 +12,9 @@ text_client = OpenAI(
     api_key=os.getenv("HF_TOKEN", "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")
 )
 
-# Initialize the client for IMAGE generation with featherless-ai provider
+# Initialize the client for IMAGE generation with fal-ai provider
 image_client = InferenceClient(
-    provider="featherless-ai",  # Using featherless-ai provider
+    provider="fal-ai",  # Using fal-ai provider
     api_key=os.getenv("HF_TOKEN", "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")
 )
 
@@ -93,52 +93,54 @@ class MultiModelChatbotGUI:
         )
         send_button.pack(side=tk.RIGHT)
         
-        self.add_chat_message("Assistant", "Hello! I can help you with text generation and create images from text. What would you like to do?", False)
+        self.add_chat_message("Assistant", "Hello! I can help you with text generation and create images using ByteDance's SDXL-Lightning model. What would you like to do?", False)
     
     def setup_image_tab(self):
         title_font = font.Font(family="Helvetica", size=16, weight="bold")
         
         title_label = tk.Label(
             self.image_frame, 
-            text="🎨 AI Image Generator", 
+            text="🎨 SDXL-Lightning Image Generator", 
             font=title_font, 
             fg='#ff6b6b',
             bg='#2b2b2b'
         )
         title_label.pack(pady=10)
         
+        # Info about the model
+        info_label = tk.Label(
+            self.image_frame,
+            text="ByteDance's SDXL-Lightning: Ultra-fast image generation with high quality results",
+            fg='#888888',
+            bg='#2b2b2b',
+            font=('Arial', 9),
+            wraplength=500
+        )
+        info_label.pack(pady=5)
+        
+        # Model info - fixed to SDXL-Lightning
         model_frame = tk.Frame(self.image_frame, bg='#2b2b2b')
         model_frame.pack(pady=5, padx=20, fill='x')
         
-        tk.Label(model_frame, text="Image Model:", fg='white', bg='#2b2b2b').pack(side=tk.LEFT)
+        tk.Label(model_frame, text="Model:", fg='white', bg='#2b2b2b', font=('Arial', 10, 'bold')).pack(side=tk.LEFT)
         
-        # UPDATED: Models that work with featherless-ai provider
-        self.image_model_var = tk.StringVar(value="runwayml/stable-diffusion-v1-5")
-        model_dropdown = ttk.Combobox(
+        model_name_label = tk.Label(
             model_frame,
-            textvariable=self.image_model_var,
-            values=[
-                "runwayml/stable-diffusion-v1-5",      # Most reliable
-                "stabilityai/stable-diffusion-2-1",    # Good alternative
-                "CompVis/stable-diffusion-v1-4",       # Original version
-                # These models are known to work well with featherless-ai
-                "Lykon/dreamshaper-8",                 # Popular for artistic styles
-                "SG161222/Realistic_Vision_V5.1",      # Good for photorealistic
-            ],
-            state="readonly",
-            width=30
+            text="ByteDance/SDXL-Lightning",
+            fg='#00ff00',
+            bg='#2b2b2b',
+            font=('Arial', 10)
         )
-        model_dropdown.pack(side=tk.LEFT, padx=(10, 0))
+        model_name_label.pack(side=tk.LEFT, padx=(10, 0))
         
-        # Add info label about featherless-ai
-        info_label = tk.Label(
+        provider_label = tk.Label(
             model_frame,
-            text="(Using featherless-ai provider)",
+            text="(via fal-ai provider)",
             fg='#888888',
             bg='#2b2b2b',
             font=('Arial', 8)
         )
-        info_label.pack(side=tk.RIGHT)
+        provider_label.pack(side=tk.RIGHT)
         
         prompt_frame = tk.Frame(self.image_frame, bg='#2b2b2b')
         prompt_frame.pack(pady=10, padx=20, fill='x')
@@ -155,36 +157,37 @@ class MultiModelChatbotGUI:
         )
         self.image_prompt.pack(pady=5, fill='x')
         
+        # Example prompts optimized for SDXL-Lightning
         examples_frame = tk.Frame(self.image_frame, bg='#2b2b2b')
         examples_frame.pack(pady=5, padx=20, fill='x')
         
         tk.Button(
             examples_frame,
-            text="Astronaut riding a horse",
-            command=lambda: self.set_prompt("Astronaut riding a horse on Mars, photorealistic, 4k"),
+            text="Astronaut",
+            command=lambda: self.set_prompt("Astronaut riding a horse on Mars, photorealistic, 4k, detailed"),
             bg='#3b3b3b',
             fg='#ffffff'
         ).pack(side=tk.LEFT, padx=(0, 5))
         
         tk.Button(
             examples_frame,
-            text="Fantasy landscape",
-            command=lambda: self.set_prompt("A magical forest with glowing mushrooms and fairies, fantasy art"),
+            text="Fantasy",
+            command=lambda: self.set_prompt("A magical forest with glowing mushrooms and fairies, fantasy art, digital painting"),
             bg='#3b3b3b',
             fg='#ffffff'
         ).pack(side=tk.LEFT, padx=(0, 5))
         
         tk.Button(
             examples_frame,
-            text="Cyberpunk city",
-            command=lambda: self.set_prompt("Cyberpunk neon-lit cityscape at night with flying cars, rain-soaked streets"),
+            text="Portrait",
+            command=lambda: self.set_prompt("A beautiful portrait of a person with detailed facial features, professional photography, sharp focus"),
             bg='#3b3b3b',
             fg='#ffffff'
         ).pack(side=tk.LEFT)
         
         generate_btn = tk.Button(
             self.image_frame,
-            text="✨ Generate Image",
+            text="⚡ Generate with SDXL-Lightning",
             command=self.generate_image,
             bg='#ff6b6b',
             fg='#000000',
@@ -195,7 +198,7 @@ class MultiModelChatbotGUI:
         
         self.image_label = tk.Label(
             self.image_frame, 
-            text="Your generated image will appear here", 
+            text="Images will be generated using ByteDance SDXL-Lightning via fal-ai", 
             bg='#1e1e1e',
             fg='#888888',
             font=('Arial', 10),
@@ -256,33 +259,40 @@ class MultiModelChatbotGUI:
             messagebox.showwarning("Warning", "Please enter an image description")
             return
         
-        selected_model = self.image_model_var.get()
-        self.image_label.config(text=f"Generating image with {selected_model}...\nUsing featherless-ai provider...\nThis may take 15-30 seconds...")
-        Thread(target=self.generate_image_thread, args=(prompt, selected_model), daemon=True).start()
+        self.image_label.config(text="Generating image with SDXL-Lightning...\nUsing fal-ai provider...\nThis should be fast!")
+        Thread(target=self.generate_image_thread, args=(prompt,), daemon=True).start()
     
-    def generate_image_thread(self, prompt, model_name):
+    def generate_image_thread(self, prompt):
         try:
-            # Use the clean text_to_image API with featherless-ai provider
+            # Use the fal-ai provider with SDXL-Lightning model
             image = image_client.text_to_image(
                 prompt,
-                model=model_name,
+                model="ByteDance/SDXL-Lightning",
             )
             
-            # Resize for display
-            image = image.resize((400, 400), Image.Resampling.LANCZOS)
+            # Resize for display while maintaining aspect ratio
+            original_width, original_height = image.size
+            max_size = 400
+            if original_width > original_height:
+                new_width = max_size
+                new_height = int(original_height * (max_size / original_width))
+            else:
+                new_height = max_size
+                new_width = int(original_width * (max_size / original_height))
+                
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(image)
             
-            self.root.after(0, lambda: self.display_image(photo, prompt, model_name))
+            self.root.after(0, lambda: self.display_image(photo, prompt))
                 
         except Exception as e:
-            # Fixed error handling
             self.root.after(0, lambda e=e: self.image_label.config(text=f"Error: {str(e)}"))
     
-    def display_image(self, photo, prompt, model_name):
+    def display_image(self, photo, prompt):
         self.image_label.config(image=photo, text="")
         self.image_label.image = photo
         
-        self.add_chat_message("Assistant", f"Generated an image using {model_name} via featherless-ai based on: '{prompt}'", False)
+        self.add_chat_message("Assistant", f"Generated an image using ByteDance/SDXL-Lightning via fal-ai based on: '{prompt}'", False)
 
 def main():
     root = tk.Tk()
